@@ -6,6 +6,7 @@ const int TOTAL_LIVES = 3;
 const int LIVES_LED = 13;
 const int GAME_ENDED = 0;
 const int GAME_STARTED = 1;
+const int GAME_ONGOING = 2;
 
 int freqs[] = {131, 147, 165, 175, 196, 220, 247, 262, 294, 330, 349, 392, 440, 494, 523, 587, 659, 698, 784, 880, 988};
 char notes[] = "1234567cdefgabCDEFGAB";
@@ -49,7 +50,7 @@ void loop() {
   //check for new game command
   if(strcmp(answer,"00000")==0) {newGame();} 
   
-  if(gameStatus==GAME_STARTED) {
+  if(gameStatus!=GAME_ENDED) {
     boolean newMelody=false;
     
     if(strcmp(answer,"00000")!=0) {
@@ -78,11 +79,13 @@ void loop() {
     
     int totalNotes = levels[levelIndex][0];
     int noteDuration = levels[levelIndex][1];
-    if(levelIndex==0 || newMelody) {createMelody(melody, totalNotes);}
+    if((levelIndex==0 && gameStatus==GAME_STARTED) || newMelody) {createMelody(melody, totalNotes);}
     Serial.print("Level: "); Serial.print(levelIndex);
     Serial.print(" Melody: ");Serial.println(melody);
     delay(2500);
-    playMelody(melody, noteDuration);    
+    playMelody(melody, noteDuration);
+    
+    gameStatus = GAME_ONGOING;
   }
 
 }
@@ -99,7 +102,7 @@ void getAnswer(char* answer) {
   int iterationCounter = 0;
   int livesIndicatorStatus = 0;
   while(strobbio.getStatus()!=STATUS_DATA) {
-    if(gameStatus==GAME_STARTED) {
+    if(gameStatus!=GAME_ENDED) {
       if((iterationCounter++)%10000==0) {
         if(livesIndicatorStatus<2*lives) {
           if(livesIndicatorStatus%2==0) {digitalWrite(LIVES_LED, HIGH);}
